@@ -1,4 +1,4 @@
-import requests,json,time,random
+import requests,json
 # 搜索公司
 def searchCompany(str):
     response = None
@@ -24,6 +24,7 @@ def searchInv(pripid,nodeNum):
         url = "http://app.gsxt.gov.cn/gsxt/corp-query-entprise-info-shareholder-"+pripid+".html?nodeNum="+nodeNum+"&entType=1&start=0&sourceType=I"
         print(url)
         payload = {}
+        # 需要设置UA，否则会被识别为攻击请求
         headers = {
             'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Html5Plus/1.0',
             'Cookie': 'JSESSIONID=65E388078D2AD812DC07B3D2C30956BD; __jsluid_h=171aaf9744cb5a036917ece969b31951; SECTOKEN=7408288245531542052; tlb_cookie=172.16.12.1108080'
@@ -36,23 +37,21 @@ def get_info(str):
     try:
         resp=searchCompany(str)
         tdict=get_comp_data(resp)
+        if tdict['hasRecord']==False:
+            return tdict
         resp = searchInv(tdict['pripid'], tdict['nodeNum'])
         tdict['inv']=get_inv_data(resp)
-        sec=random.randint(0,9)
-        print('延迟==================['+sec.__str__()+'s]')
-        time.sleep(sec)
         return tdict
     except:
         return None
-
-
-
 
 def get_comp_data(resp):
     print(resp)
     jsonresp=json.loads(resp)
     # 获取第一条记录
-    # print(jsonresp['data']['result']['data'])
+    data=jsonresp['data']['result']['data']
+    if len(data)==0:
+        return {'hasRecord':False}
 
     # 登记状态
     corpStatusString=jsonresp['data']['result']['data'][0]['corpStatusString']
@@ -69,7 +68,7 @@ def get_comp_data(resp):
     # 注册资本
     regCap=str(jsonresp['data']['result']['data'][0]['regCap'])+'万人民币'
 
-    return {'corpStatusString':corpStatusString,'uniscId':uniscId,'pripid':pripid,'legelRep':legelRep,'nodeNum':nodeNum,'estDate':estDate,'regCap':regCap}
+    return {'corpStatusString':corpStatusString,'uniscId':uniscId,'pripid':pripid,'legelRep':legelRep,'nodeNum':nodeNum,'estDate':estDate,'regCap':regCap,'hasRecord':True}
 
 def get_inv_data(resp):
     print(resp)

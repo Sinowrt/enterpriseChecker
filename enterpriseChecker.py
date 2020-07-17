@@ -1,11 +1,12 @@
 # coding=utf-8
 
-import xlrd,xlwt
-import requests,json,time
+import xlrd,time,random
 from func import get_info
 from xlutils.copy import copy
 
-xlspath = '/Users/jackietsoi/Documents/workDirectory/zhtb/Docs/xk/cp.xls'
+# 设置表格路径
+xlspath = 'F:/暂存/USB Drive/0715/zhtb/Docs/财务信控资料/cp.xls'
+
 # 打开文件
 data = xlrd.open_workbook(xlspath)
 
@@ -31,20 +32,34 @@ for i in range(table.nrows):
 print(len(rowlist))
 
 for i in rowlist:
-    corpname=table.cell(i,0).value
-    info=get_info(corpname)
-    if info != None:
+    info = None
+    corpname = table.cell(i, 0).value
+    while info == None:
+        info = get_info(corpname)
+        # 随机延迟sec秒再请求
+        sec = random.randint(0, 9)
+        print('延迟==================[' + sec.__str__() + 's]')
+        time.sleep(sec)
+
+    if info['hasRecord'] == True:
         # 社会信用编号
         ws.write(i, 14, info['uniscId'])
+        # 成立日期
         ws.write(i, 15, info['estDate'])
+        # 登记状态
         ws.write(i, 16, info['corpStatusString'])
+        # 法人
         ws.write(i, 17, info['legelRep'])
+        # 注册资本
         ws.write(i, 18, info['regCap'])
+        # 股本结构
         ws.write(i, 19, info['inv'])
 
-        wb.save('/Users/jackietsoi/Documents/workDirectory/zhtb/Docs/xk/cp.xls')
+        # 保存行
+        wb.save(xlspath)
     else:
         continue
+
 
 
 
